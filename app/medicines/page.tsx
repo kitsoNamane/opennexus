@@ -131,56 +131,54 @@ export default function MedicinesCatalog() {
             </>
           ) : filteredMedicines.length > 0 ? (
             filteredMedicines.map((medicine) => (
-              <Card
-                key={medicine.id}
-                className="p-6 hover:shadow-lg transition-shadow cursor-pointer hover:border-primary"
-              >
-                <div className="flex items-start justify-between mb-4">
-                  <div className="flex-1">
-                    <h3 className="font-semibold text-lg text-foreground line-clamp-2">
-                      {medicine.medicine_name}
-                    </h3>
-                    <p className="text-sm text-muted-foreground mt-1">
-                      {medicine.generic_name}
-                    </p>
-                  </div>
-                  {medicine.is_essential_medicine && (
-                    <Badge className="ml-2 bg-red-100 text-red-800">Essential</Badge>
-                  )}
-                </div>
+              <div key={medicine.id}>
+                <a href={`/medicines/${medicine.id}`} className="block">
+                  <Card className="p-6 hover:shadow-lg transition-shadow cursor-pointer hover:border-primary h-full">
+                    <div className="flex items-start justify-between mb-4">
+                      <div className="flex-1">
+                        <h3 className="font-semibold text-lg text-foreground line-clamp-2">
+                          {medicine.medicine_name}
+                        </h3>
+                        <p className="text-sm text-muted-foreground mt-1">
+                          {medicine.generic_name}
+                        </p>
+                      </div>
+                      {medicine.is_essential_medicine && (
+                        <Badge className="ml-2 bg-red-100 text-red-800">Essential</Badge>
+                      )}
+                    </div>
 
-                <div className="space-y-3 mb-4">
-                  <div className="text-sm">
-                    <span className="text-muted-foreground">Strength:</span>
-                    <span className="ml-2 font-medium text-foreground">{medicine.strength}</span>
-                  </div>
-                  <div className="text-sm">
-                    <span className="text-muted-foreground">Form:</span>
-                    <span className="ml-2 font-medium text-foreground">{medicine.form}</span>
-                  </div>
-                  <div className="text-sm">
-                    <span className="text-muted-foreground">NAPPI Code:</span>
-                    <span className="ml-2 font-mono text-foreground text-xs bg-muted px-2 py-1 rounded">
-                      {medicine.nappi_code}
-                    </span>
-                  </div>
-                  <div className="text-sm">
-                    <span className="text-muted-foreground">Manufacturer:</span>
-                    <span className="ml-2 font-medium text-foreground">
-                      {medicine.manufacturer}
-                    </span>
-                  </div>
-                </div>
+                    <div className="space-y-3 mb-4">
+                      <div className="text-sm">
+                        <span className="text-muted-foreground">Strength:</span>
+                        <span className="ml-2 font-medium text-foreground">{medicine.strength}</span>
+                      </div>
+                      <div className="text-sm">
+                        <span className="text-muted-foreground">Form:</span>
+                        <span className="ml-2 font-medium text-foreground">{medicine.form}</span>
+                      </div>
+                      <div className="text-sm">
+                        <span className="text-muted-foreground">NAPPI Code:</span>
+                        <span className="ml-2 font-mono text-foreground text-xs bg-muted px-2 py-1 rounded">
+                          {medicine.nappi_code}
+                        </span>
+                      </div>
+                      <div className="text-sm">
+                        <span className="text-muted-foreground">Manufacturer:</span>
+                        <span className="ml-2 font-medium text-foreground line-clamp-1">
+                          {medicine.manufacturer}
+                        </span>
+                      </div>
+                    </div>
 
-                <div className="flex gap-2 pt-4 border-t border-border">
-                  <Button variant="outline" size="sm" className="flex-1">
-                    View Details
-                  </Button>
-                  <Button size="sm" className="flex-1">
-                    Add to Facility
-                  </Button>
-                </div>
-              </Card>
+                    <div className="flex gap-2 pt-4 border-t border-border">
+                      <Button variant="outline" size="sm" className="flex-1">
+                        View Details
+                      </Button>
+                    </div>
+                  </Card>
+                </a>
+              </div>
             ))
           ) : (
             <div className="col-span-full text-center py-12">
