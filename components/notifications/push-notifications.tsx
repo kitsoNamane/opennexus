@@ -7,6 +7,7 @@ import { Badge } from "@/components/ui/badge"
 import {
   Sheet,
   SheetContent,
+  SheetDescription,
   SheetHeader,
   SheetTitle,
   SheetTrigger,
@@ -139,6 +140,9 @@ export function NotificationBell({ userRole = "cms" }: NotificationBellProps) {
                 </Button>
               )}
             </div>
+            <SheetDescription className="sr-only">
+              View and manage your system notifications and alerts
+            </SheetDescription>
           </SheetHeader>
           
           <ScrollArea className="h-[calc(100vh-100px)] mt-4">
