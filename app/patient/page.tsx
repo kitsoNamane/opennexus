@@ -17,7 +17,7 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { ContinuityRing, RiskBadge } from '@/components/dashboard/risk-badge';
-import { PATIENTS_WITH_HISTORY, type PatientWithHistory } from '@/lib/data';
+import { PATIENTS_WITH_HISTORY, type PatientWithHistory, type ClinicalVisit, type TreatmentMilestone } from '@/lib/data';
 import {
   Activity,
   Search,
@@ -36,6 +36,15 @@ import {
   Building2,
   Clock,
   Shield,
+  HeartPulse,
+  Thermometer,
+  TestTube,
+  ClipboardList,
+  CircleDot,
+  CheckCircle,
+  XCircle,
+  TrendingUp,
+  TrendingDown,
 } from 'lucide-react';
 
 // Auth check component
@@ -442,8 +451,256 @@ function PatientDetailView({
                 </div>
               </div>
             </div>
+            
+            {/* Allergies & Chronic Conditions */}
+            {(patient.allergies?.length || patient.chronicConditions?.length) && (
+              <div className="mt-4 pt-4 border-t grid md:grid-cols-2 gap-4">
+                {patient.allergies && patient.allergies.length > 0 && (
+                  <div>
+                    <p className="text-sm font-medium text-destructive mb-2">Allergies</p>
+                    <div className="flex flex-wrap gap-2">
+                      {patient.allergies.map((allergy, i) => (
+                        <Badge key={i} variant="destructive" className="text-xs">
+                          {allergy}
+                        </Badge>
+                      ))}
+                    </div>
+                  </div>
+                )}
+                {patient.chronicConditions && patient.chronicConditions.length > 0 && (
+                  <div>
+                    <p className="text-sm font-medium text-muted-foreground mb-2">Chronic Conditions</p>
+                    <div className="flex flex-wrap gap-2">
+                      {patient.chronicConditions.map((condition, i) => (
+                        <Badge key={i} variant="outline" className="text-xs">
+                          {condition}
+                        </Badge>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
           </CardContent>
         </Card>
+
+        {/* Treatment Milestones Timeline */}
+        {patient.treatmentMilestones && patient.treatmentMilestones.length > 0 && (
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-base flex items-center gap-2">
+                <ClipboardList className="h-4 w-4" />
+                Treatment Timeline
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="relative">
+                <div className="absolute left-4 top-0 bottom-0 w-0.5 bg-border" />
+                <div className="space-y-4">
+                  {patient.treatmentMilestones.map((milestone, i) => {
+                    const getIcon = () => {
+                      switch (milestone.type) {
+                        case 'start': return <CircleDot className="h-4 w-4 text-primary" />;
+                        case 'improvement': return <TrendingUp className="h-4 w-4 text-success" />;
+                        case 'concern': return <AlertTriangle className="h-4 w-4 text-destructive" />;
+                        case 'lab': return <TestTube className="h-4 w-4 text-primary" />;
+                        case 'adjustment': return <Pill className="h-4 w-4 text-accent-foreground" />;
+                        case 'completion': return <CheckCircle className="h-4 w-4 text-success" />;
+                        default: return <CircleDot className="h-4 w-4 text-muted-foreground" />;
+                      }
+                    };
+                    const getBg = () => {
+                      switch (milestone.type) {
+                        case 'concern': return 'bg-destructive/10 border-destructive/30';
+                        case 'improvement': return 'bg-success/10 border-success/30';
+                        default: return 'bg-card';
+                      }
+                    };
+                    return (
+                      <div key={i} className="relative pl-10">
+                        <div className={`absolute left-2 top-1.5 p-1 rounded-full bg-background border ${milestone.type === 'concern' ? 'border-destructive' : milestone.type === 'improvement' ? 'border-success' : 'border-border'}`}>
+                          {getIcon()}
+                        </div>
+                        <div className={`p-3 rounded-lg border ${getBg()}`}>
+                          <div className="flex items-center justify-between mb-1">
+                            <span className="font-medium text-sm">{milestone.event}</span>
+                            <span className="text-xs text-muted-foreground">{milestone.date}</span>
+                          </div>
+                          {milestone.notes && (
+                            <p className="text-sm text-muted-foreground">{milestone.notes}</p>
+                          )}
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
+        {/* Clinical Visits History */}
+        {patient.clinicalVisits && patient.clinicalVisits.length > 0 && (
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-base flex items-center gap-2">
+                <Stethoscope className="h-4 w-4" />
+                Clinical Visit History
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              {patient.clinicalVisits.map((visit) => (
+                <div key={visit.id} className="border rounded-lg overflow-hidden">
+                  {/* Visit Header */}
+                  <div className="bg-muted/50 p-4 flex flex-wrap items-center justify-between gap-2">
+                    <div className="flex items-center gap-3">
+                      <Badge variant={visit.outcome === 'Improved' ? 'default' : visit.outcome === 'Deteriorating' ? 'destructive' : 'secondary'}>
+                        {visit.type}
+                      </Badge>
+                      <span className="font-medium">{visit.date}</span>
+                    </div>
+                    <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                      <Building2 className="h-4 w-4" />
+                      {visit.facilityName}
+                    </div>
+                  </div>
+                  
+                  <div className="p-4 space-y-4">
+                    {/* Clinician & Chief Complaint */}
+                    <div className="grid md:grid-cols-2 gap-4">
+                      <div>
+                        <p className="text-sm text-muted-foreground">Clinician</p>
+                        <p className="font-medium">{visit.clinicianName}</p>
+                      </div>
+                      {visit.chiefComplaint && (
+                        <div>
+                          <p className="text-sm text-muted-foreground">Chief Complaint</p>
+                          <p className="font-medium">{visit.chiefComplaint}</p>
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Vitals */}
+                    {visit.vitals && (
+                      <div>
+                        <p className="text-sm font-medium mb-2 flex items-center gap-2">
+                          <HeartPulse className="h-4 w-4 text-destructive" />
+                          Vitals
+                        </p>
+                        <div className="flex flex-wrap gap-3">
+                          {visit.vitals.bloodPressure && (
+                            <div className="bg-muted/50 px-3 py-1.5 rounded text-sm">
+                              <span className="text-muted-foreground">BP:</span> {visit.vitals.bloodPressure}
+                            </div>
+                          )}
+                          {visit.vitals.heartRate && (
+                            <div className="bg-muted/50 px-3 py-1.5 rounded text-sm">
+                              <span className="text-muted-foreground">HR:</span> {visit.vitals.heartRate} bpm
+                            </div>
+                          )}
+                          {visit.vitals.temperature && (
+                            <div className="bg-muted/50 px-3 py-1.5 rounded text-sm">
+                              <span className="text-muted-foreground">Temp:</span> {visit.vitals.temperature}°C
+                            </div>
+                          )}
+                          {visit.vitals.weight && (
+                            <div className="bg-muted/50 px-3 py-1.5 rounded text-sm">
+                              <span className="text-muted-foreground">Weight:</span> {visit.vitals.weight} kg
+                            </div>
+                          )}
+                          {visit.vitals.oxygenSaturation && (
+                            <div className="bg-muted/50 px-3 py-1.5 rounded text-sm">
+                              <span className="text-muted-foreground">SpO2:</span> {visit.vitals.oxygenSaturation}%
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Lab Results */}
+                    {visit.labResults && visit.labResults.length > 0 && (
+                      <div>
+                        <p className="text-sm font-medium mb-2 flex items-center gap-2">
+                          <TestTube className="h-4 w-4 text-primary" />
+                          Lab Results
+                        </p>
+                        <div className="overflow-x-auto">
+                          <table className="w-full text-sm">
+                            <thead>
+                              <tr className="border-b">
+                                <th className="text-left py-2 font-medium">Test</th>
+                                <th className="text-left py-2 font-medium">Result</th>
+                                <th className="text-left py-2 font-medium">Reference</th>
+                                <th className="text-center py-2 font-medium">Status</th>
+                              </tr>
+                            </thead>
+                            <tbody>
+                              {visit.labResults.map((lab, i) => (
+                                <tr key={i} className="border-b last:border-0">
+                                  <td className="py-2">{lab.testName}</td>
+                                  <td className="py-2 font-medium">{lab.result}</td>
+                                  <td className="py-2 text-muted-foreground">{lab.referenceRange}</td>
+                                  <td className="py-2 text-center">
+                                    {lab.status === 'normal' && <CheckCircle className="h-4 w-4 text-success mx-auto" />}
+                                    {lab.status === 'abnormal' && <AlertTriangle className="h-4 w-4 text-amber-500 mx-auto" />}
+                                    {lab.status === 'critical' && <XCircle className="h-4 w-4 text-destructive mx-auto" />}
+                                  </td>
+                                </tr>
+                              ))}
+                            </tbody>
+                          </table>
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Clinical Notes */}
+                    <div>
+                      <p className="text-sm font-medium mb-1">Clinical Notes</p>
+                      <p className="text-sm text-muted-foreground bg-muted/30 p-3 rounded">{visit.clinicalNotes}</p>
+                    </div>
+
+                    {/* Diagnosis & Treatment Plan */}
+                    <div className="grid md:grid-cols-2 gap-4">
+                      {visit.diagnosis && (
+                        <div>
+                          <p className="text-sm font-medium mb-1">Diagnosis</p>
+                          <p className="text-sm">{visit.diagnosis}</p>
+                        </div>
+                      )}
+                      {visit.treatmentPlan && (
+                        <div>
+                          <p className="text-sm font-medium mb-1">Treatment Plan</p>
+                          <p className="text-sm">{visit.treatmentPlan}</p>
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Outcome & Next Appointment */}
+                    <div className="flex flex-wrap items-center justify-between gap-2 pt-3 border-t">
+                      <div className="flex items-center gap-2">
+                        <span className="text-sm text-muted-foreground">Outcome:</span>
+                        <Badge variant={
+                          visit.outcome === 'Improved' ? 'default' :
+                          visit.outcome === 'Deteriorating' ? 'destructive' :
+                          'secondary'
+                        }>
+                          {visit.outcome}
+                        </Badge>
+                      </div>
+                      {visit.nextAppointment && (
+                        <div className="flex items-center gap-2 text-sm">
+                          <Calendar className="h-4 w-4 text-muted-foreground" />
+                          <span className="text-muted-foreground">Next:</span>
+                          <span className="font-medium">{visit.nextAppointment}</span>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </CardContent>
+          </Card>
+        )}
 
         {/* Current Medications */}
         <Card>

@@ -432,6 +432,45 @@ export interface PrescriptionRecord {
   dispensedBy?: string
 }
 
+// Clinical Visit/Encounter Record
+export interface ClinicalVisit {
+  id: string
+  date: string
+  type: "Initial Consultation" | "Follow-up" | "Lab Review" | "Treatment Review" | "Emergency" | "Discharge"
+  facilityId: string
+  facilityName: string
+  facilityDistrict: District
+  clinicianId: string
+  clinicianName: string
+  chiefComplaint?: string
+  clinicalNotes: string
+  vitals?: {
+    bloodPressure?: string
+    heartRate?: number
+    temperature?: number
+    weight?: number
+    oxygenSaturation?: number
+  }
+  labResults?: {
+    testName: string
+    result: string
+    referenceRange: string
+    status: "normal" | "abnormal" | "critical"
+  }[]
+  diagnosis?: string
+  treatmentPlan?: string
+  outcome: "Ongoing Treatment" | "Improved" | "Stable" | "Deteriorating" | "Referred" | "Discharged"
+  nextAppointment?: string
+}
+
+// Treatment Milestone
+export interface TreatmentMilestone {
+  date: string
+  event: string
+  type: "start" | "phase-change" | "lab" | "adjustment" | "improvement" | "concern" | "completion"
+  notes?: string
+}
+
 // Enhanced Patient with location and history
 export interface PatientWithHistory extends Patient {
   homeAddress: string
@@ -441,7 +480,11 @@ export interface PatientWithHistory extends Patient {
   dateOfBirth: string
   gender: "Male" | "Female"
   prescriptionHistory: PrescriptionRecord[]
+  clinicalVisits?: ClinicalVisit[]
+  treatmentMilestones?: TreatmentMilestone[]
   treatmentPhase?: string
+  allergies?: string[]
+  chronicConditions?: string[]
 }
 
 export const PATIENTS_WITH_HISTORY: PatientWithHistory[] = [
@@ -467,6 +510,81 @@ export const PATIENTS_WITH_HISTORY: PatientWithHistory[] = [
     adherenceRate: 94,
     riskStatus: "good",
     treatmentPhase: "Intensive Phase",
+    allergies: ["Penicillin"],
+    chronicConditions: [],
+    treatmentMilestones: [
+      { date: "2023-11-01", event: "TB Treatment Initiated", type: "start", notes: "Patient started on standard 4-drug regimen" },
+      { date: "2023-11-15", event: "Week 2 Follow-up", type: "improvement", notes: "Symptoms improving, tolerating medication well" },
+      { date: "2023-12-01", event: "Month 1 Sputum Test", type: "lab", notes: "Sputum smear still positive, continue intensive phase" },
+      { date: "2023-12-11", event: "Ethambutol Discontinued", type: "adjustment", notes: "Ethambutol stopped per protocol, continuing RIF/INH/PZA" },
+      { date: "2024-01-08", event: "Month 2 Review", type: "improvement", notes: "Good adherence, symptoms resolved, weight gain of 2kg" },
+    ],
+    clinicalVisits: [
+      {
+        id: "V-001",
+        date: "2024-01-08",
+        type: "Follow-up",
+        facilityId: "F-001",
+        facilityName: "Princess Marina Hospital",
+        facilityDistrict: "South-East",
+        clinicianId: "DR-001",
+        clinicianName: "Dr. M. Kgosidintsi",
+        chiefComplaint: "Routine TB follow-up",
+        clinicalNotes: "Patient reports feeling well. No cough or night sweats. Appetite improved. Tolerating medications without side effects.",
+        vitals: { bloodPressure: "118/76", heartRate: 72, temperature: 36.8, weight: 58, oxygenSaturation: 98 },
+        labResults: [
+          { testName: "Sputum AFB Smear", result: "Negative", referenceRange: "Negative", status: "normal" },
+          { testName: "Liver Function (ALT)", result: "32 U/L", referenceRange: "7-56 U/L", status: "normal" },
+        ],
+        diagnosis: "Pulmonary TB - Responding to treatment",
+        treatmentPlan: "Continue current regimen. Prepare for continuation phase.",
+        outcome: "Improved",
+        nextAppointment: "2024-02-05"
+      },
+      {
+        id: "V-002",
+        date: "2023-12-11",
+        type: "Treatment Review",
+        facilityId: "F-001",
+        facilityName: "Princess Marina Hospital",
+        facilityDistrict: "South-East",
+        clinicianId: "DR-001",
+        clinicianName: "Dr. M. Kgosidintsi",
+        chiefComplaint: "Month 1 TB treatment review",
+        clinicalNotes: "Completed first month of intensive phase. Sputum still positive but patient clinically improved. Weight stable.",
+        vitals: { bloodPressure: "120/78", heartRate: 76, temperature: 37.0, weight: 56, oxygenSaturation: 97 },
+        labResults: [
+          { testName: "Sputum AFB Smear", result: "1+", referenceRange: "Negative", status: "abnormal" },
+          { testName: "Liver Function (ALT)", result: "45 U/L", referenceRange: "7-56 U/L", status: "normal" },
+        ],
+        diagnosis: "Pulmonary TB - Intensive phase month 1",
+        treatmentPlan: "Continue intensive phase. Discontinue Ethambutol per protocol.",
+        outcome: "Ongoing Treatment",
+        nextAppointment: "2024-01-08"
+      },
+      {
+        id: "V-003",
+        date: "2023-11-13",
+        type: "Initial Consultation",
+        facilityId: "F-001",
+        facilityName: "Princess Marina Hospital",
+        facilityDistrict: "South-East",
+        clinicianId: "DR-002",
+        clinicianName: "Dr. T. Pheto",
+        chiefComplaint: "Persistent cough for 3 weeks, night sweats, weight loss",
+        clinicalNotes: "Patient presents with classic TB symptoms. Sputum positive for AFB. CXR shows bilateral upper lobe infiltrates. No drug resistance on GeneXpert.",
+        vitals: { bloodPressure: "115/72", heartRate: 88, temperature: 37.8, weight: 54, oxygenSaturation: 95 },
+        labResults: [
+          { testName: "Sputum AFB Smear", result: "3+", referenceRange: "Negative", status: "critical" },
+          { testName: "GeneXpert MTB/RIF", result: "MTB Detected, RIF Sensitive", referenceRange: "Not Detected", status: "abnormal" },
+          { testName: "HIV Rapid Test", result: "Non-Reactive", referenceRange: "Non-Reactive", status: "normal" },
+        ],
+        diagnosis: "Drug-sensitive Pulmonary Tuberculosis",
+        treatmentPlan: "Initiate standard TB treatment: RHZE for 2 months intensive phase, then RH for 4 months continuation.",
+        outcome: "Ongoing Treatment",
+        nextAppointment: "2023-11-27"
+      },
+    ],
     prescriptionHistory: [
       {
         id: "RX-4521",
@@ -550,6 +668,60 @@ export const PATIENTS_WITH_HISTORY: PatientWithHistory[] = [
     nextPickupDate: "2024-01-16",
     adherenceRate: 78,
     riskStatus: "warning",
+    allergies: [],
+    chronicConditions: ["Type 2 Diabetes Mellitus", "Essential Hypertension"],
+    treatmentMilestones: [
+      { date: "2022-06-15", event: "Diabetes & Hypertension Diagnosed", type: "start", notes: "Started on Metformin and Amlodipine" },
+      { date: "2022-09-15", event: "HbA1c Improved to 7.2%", type: "improvement", notes: "Good glycemic control achieved" },
+      { date: "2023-06-10", event: "Blood Pressure Well Controlled", type: "improvement", notes: "BP consistently below 140/90" },
+      { date: "2023-12-02", event: "Missed Appointment", type: "concern", notes: "Patient did not attend scheduled review" },
+      { date: "2024-01-02", event: "Medication Running Low", type: "concern", notes: "Patient has only 3 days supply remaining" },
+    ],
+    clinicalVisits: [
+      {
+        id: "V-004",
+        date: "2024-01-02",
+        type: "Follow-up",
+        facilityId: "F-003",
+        facilityName: "Maun General Hospital",
+        facilityDistrict: "North-West",
+        clinicianId: "DR-005",
+        clinicianName: "Dr. K. Mothibi",
+        chiefComplaint: "Routine NCD follow-up",
+        clinicalNotes: "Patient admits to irregular medication use. Missed several doses over holidays. Blood sugar elevated. Need to reinforce adherence counseling.",
+        vitals: { bloodPressure: "145/92", heartRate: 82, temperature: 36.6, weight: 78, oxygenSaturation: 98 },
+        labResults: [
+          { testName: "Random Blood Glucose", result: "11.2 mmol/L", referenceRange: "4.4-7.8 mmol/L", status: "abnormal" },
+          { testName: "Blood Pressure", result: "145/92 mmHg", referenceRange: "<140/90 mmHg", status: "abnormal" },
+        ],
+        diagnosis: "Type 2 DM - Suboptimal control, Hypertension - Suboptimal control",
+        treatmentPlan: "Continue current medications. Emphasized importance of adherence. Schedule follow-up in 2 weeks.",
+        outcome: "Stable",
+        nextAppointment: "2024-01-16"
+      },
+      {
+        id: "V-005",
+        date: "2023-12-02",
+        type: "Follow-up",
+        facilityId: "F-003",
+        facilityName: "Maun General Hospital",
+        facilityDistrict: "North-West",
+        clinicianId: "DR-005",
+        clinicianName: "Dr. K. Mothibi",
+        chiefComplaint: "3-month diabetes and hypertension review",
+        clinicalNotes: "Patient reports good compliance. No hypoglycemic episodes. Blood pressure well controlled on current regimen.",
+        vitals: { bloodPressure: "132/84", heartRate: 76, temperature: 36.5, weight: 77, oxygenSaturation: 99 },
+        labResults: [
+          { testName: "HbA1c", result: "7.4%", referenceRange: "<7.0%", status: "abnormal" },
+          { testName: "Fasting Blood Glucose", result: "7.8 mmol/L", referenceRange: "4.0-6.0 mmol/L", status: "abnormal" },
+          { testName: "Creatinine", result: "92 umol/L", referenceRange: "62-106 umol/L", status: "normal" },
+        ],
+        diagnosis: "Type 2 DM - Fair control, Essential Hypertension - Controlled",
+        treatmentPlan: "Continue current medications. Dietary counseling provided. Recheck HbA1c in 3 months.",
+        outcome: "Stable",
+        nextAppointment: "2024-03-02"
+      },
+    ],
     prescriptionHistory: [
       {
         id: "RX-4522",
@@ -612,6 +784,58 @@ export const PATIENTS_WITH_HISTORY: PatientWithHistory[] = [
     adherenceRate: 65,
     riskStatus: "critical",
     treatmentPhase: "Intensive Phase",
+    allergies: [],
+    chronicConditions: [],
+    treatmentMilestones: [
+      { date: "2023-12-01", event: "TB Diagnosis & Treatment Start", type: "start", notes: "Started on standard TB regimen" },
+      { date: "2023-12-15", event: "Week 2 Check", type: "concern", notes: "Patient reports difficulty taking all pills, some nausea" },
+      { date: "2024-01-05", event: "Missed Medication Pickup", type: "concern", notes: "Patient 5 days overdue for medication collection" },
+      { date: "2024-01-14", event: "Critical: Treatment Interruption", type: "concern", notes: "Patient has been without medication for several days" },
+    ],
+    clinicalVisits: [
+      {
+        id: "V-006",
+        date: "2023-12-15",
+        type: "Follow-up",
+        facilityId: "F-004",
+        facilityName: "Tsabong Primary Hospital",
+        facilityDistrict: "Kgalagadi",
+        clinicianId: "DR-008",
+        clinicianName: "Dr. L. Sebina",
+        chiefComplaint: "TB treatment week 2 follow-up",
+        clinicalNotes: "Patient complains of nausea and loss of appetite. Has missed some doses. Cough persists. Need adherence support.",
+        vitals: { bloodPressure: "110/70", heartRate: 88, temperature: 37.4, weight: 62, oxygenSaturation: 96 },
+        labResults: [
+          { testName: "Sputum AFB Smear", result: "2+", referenceRange: "Negative", status: "abnormal" },
+        ],
+        diagnosis: "Pulmonary TB - Early treatment, adherence concerns",
+        treatmentPlan: "Continue regimen. Antiemetic prescribed for nausea. Community health worker assigned for DOT support.",
+        outcome: "Deteriorating",
+        nextAppointment: "2024-01-05"
+      },
+      {
+        id: "V-007",
+        date: "2023-12-01",
+        type: "Initial Consultation",
+        facilityId: "F-004",
+        facilityName: "Tsabong Primary Hospital",
+        facilityDistrict: "Kgalagadi",
+        clinicianId: "DR-008",
+        clinicianName: "Dr. L. Sebina",
+        chiefComplaint: "Cough for 4 weeks, fever, weight loss",
+        clinicalNotes: "Patient from remote cattle post, delayed presentation. Sputum positive. Started on TB treatment immediately.",
+        vitals: { bloodPressure: "108/68", heartRate: 92, temperature: 38.2, weight: 64, oxygenSaturation: 94 },
+        labResults: [
+          { testName: "Sputum AFB Smear", result: "2+", referenceRange: "Negative", status: "abnormal" },
+          { testName: "GeneXpert MTB/RIF", result: "MTB Detected, RIF Sensitive", referenceRange: "Not Detected", status: "abnormal" },
+          { testName: "HIV Rapid Test", result: "Non-Reactive", referenceRange: "Non-Reactive", status: "normal" },
+        ],
+        diagnosis: "Drug-sensitive Pulmonary Tuberculosis",
+        treatmentPlan: "Initiate RHZE regimen. Assign DOT supporter due to remote location.",
+        outcome: "Ongoing Treatment",
+        nextAppointment: "2023-12-15"
+      },
+    ],
     prescriptionHistory: [
       {
         id: "RX-4520",
